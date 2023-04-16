@@ -1,0 +1,126 @@
+---
+title: "01 Introduction to Machine Learning in R"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+# some file setup parameters
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 999) # display numbers in non-scientific format
+```
+
+# Program:
+- ------------------------------------------------------------------------------
+
+18:30 bis 19:15 Uhr: Workshop I: Machine Learning mit mlr3  
+19:30 bis 20:15 Uhr: Workshop II: Machine Learning mit tidymodels  
+
+
+# Machine Learning versus Statistics
+- ------------------------------------------------------------------------------
+
+Statistics:
+
+* Start of modern statistics approx. 1800 (least squares by Legendre, Gauß)
+* Used for inference & prediction
+* Humans make assumptions about the data before starting any calculations (e.g. by selecting the independent variables)
+* Humans can (theoretically) understand each step of the analysis
+
+Machine Learning:
+
+* Start in 1940s with mathematical models of neuronal networks
+* Take off in the 1990s
+* Used mainly for prediction
+* "Machine" learns to make assumptions about the data (i.e. selecting "hyperparameters" [1])
+* Humans can only interpret the results. Internal processes and weighted factors remain often hidden
+
+[1] Hyperparameters: Starting parameters for the modelling algorithms which are not part of the data themselves.
+
+See also:  
+https://www.simplilearn.com/tutorials/artificial-intelligence-tutorial/ai-vs-machine-learning-vs-deep-learning  
+https://stats.stackexchange.com/questions/443954/what-is-the-definition-of-machine-learning-vs-classical-statistics-and-can-me  
+https://stats.stackexchange.com/questions/6/the-two-cultures-statistics-vs-machine-learning  
+https://www.techtarget.com/whatis/A-Timeline-of-Machine-Learning-History  
+
+
+# Machine learning options in R
+- ------------------------------------------------------------------------------
+
+* R core + standalone packages
+* caret
+* mlr
+* tidymodels
+* mlr3
+
+
+caret:
+
+* Acronym for **C**lassification **A**nd **RE**gression **T**raining
+* Launch: 2007
+* Developers: Max Kuhn (https://www.linkedin.com/in/max-kuhn-864a9110/) et al.
+* Developer affiliation: Pfizer (U.S.A.)
+* Publication: https://www.jstatsoft.org/article/view/v028i05
+* Predecessor: R core + standalone packages 
+
+mlr:
+
+* Acronym for **M**achine **L**earning in **R**
+* Launch: 2013
+* Developers: Bernd Bischl [1], Michael Lang [2], et al.
+* Developer affiliation: [1] LMU München, [2] TU Dortmund
+* Predecessor: R core + standalone packages (is this correct ?)
+* Publication: https://jmlr.org/papers/v17/15-066.html
+* Status: "{mlr} is considered retired from the mlr-org team." (https://mlr.mlr-org.com/)
+
+tidymodels:
+
+* Acronym for **M**achine **L**earning in **R** 3
+* Launch: 2018
+* Developers: Max Kuhn [1], Hadley Wickham [2], et al.
+* Location of developers: [1] and [2] RStudio (U.S.A. and New Zealand)
+* Predecessor: caret
+* Publication: https://www.tidymodels.org/books/tmwr/
+* Wrapper package: tidyverse (simplifies the installation and loading of the 'tidymodels' packages)
+
+mlr3:
+
+* Acronym for **M**achine **L**earning in **R** 3
+* Launch: 2019
+* Developers: Bernd Bischl [1], Michael Lang [2], et al.
+* Developer affiliation: [1] LMU München, [2] TU Dortmund
+* Predecessor: mlr
+* Publication: https://mlr3book.mlr-org.com/
+* Wrapper package: mlr3verse (simplifies the installation and loading of the core 'mlr3' packages)
+
+
+## Download statistics
+
+Source: http://cran-logs.rstudio.com/
+Downloaded file: http://cran-logs.rstudio.com/2023/2023-04-10.csv.gz
+
+In Linux terminal
+```{bash}
+gzip -d 2023-04-10.csv.gz
+grep -w "caret" -c 2023-04-10.csv
+grep -w 'mlr"' -c 2023-04-10.csv
+grep -w "tidymodels" -c 2023-04-10.csv
+grep -w "tidyverse" -c 2023-04-10.csv
+grep -w 'mlr3"' -c 2023-04-10.csv
+grep -w "mlr3verse" -c 2023-04-10.csv
+
+# display of rows
+cat 2023-04-10.csv | grep -w "mlr3verse"
+```
+
+| package    | number of downloads on 10 APR 2023
+| ---------- | -------------------------------
+| caret      |  9091
+| mlr        |   465
+| tidymodels |  2082
+| tidyverse  | 53765
+| mlr3       |   217
+| mlr3verse  |    49
+
+STILL MISSING: How many packages get installed upon installation of each ML library?
