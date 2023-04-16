@@ -31,17 +31,17 @@ writeLines(readLines(data_url, 4))
 | Header         | Explanation
 | -------------- | ------------
 | int_rate       | interest rate in percent
-| loan_amnt      | requested loan amount in USD
+| loan_amnt      | requested loan amount in US Dollar
 | term           | number of month till total pay back [1]
 | grade          | loan security rating computed the Lending Club [2]
 | home_ownership | housing situation of the borrower [3]
-| annual_inc     | annual gross income of the borrower in USD
+| annual_inc     | annual gross income of the borrower in US Dollar
 | purpose        | intended use of money as indicated by the borrower
 
 Details:  
-[1] term: borrowers have to make one back payment per month  
+[1] term: Borrowers have to make one back payment per month throughout the term.
 [2] grade: The rating is calculated by Lending Club's own algorithm. The main input parameter is the borrower's FICO score (comparable to Germany's "Schufa-Abfrage"). Ratings go from "A" (pay back on time is very likely) till "G" (some risk that the borrower won't be able to pay the money back).
-[3] home_ownership: categories are mortgage, none, other, own, rent
+[3] home_ownership: Categories are mortgage, none, other, own, rent
 
 Possible analyses:
 

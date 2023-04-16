@@ -129,7 +129,7 @@ test.estimations <- predict(lm.fit, test)
 # No sure if this step is correct:
 results["r.squared.test"] <- 100 * (cor(test$int_rate, test.estimations))^2
 
-# Compute Root Mean Square Error
+# Compute Root Mean Squared Error (RMSE)
 results["RMSE.train"] <- sqrt(mean((train$int_rate - lm.fit$fitted.values)^2))
 results["RMSE.test"] <- sqrt(mean((test$int_rate - test.estimations)^2))
 
