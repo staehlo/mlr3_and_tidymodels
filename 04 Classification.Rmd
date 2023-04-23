@@ -1,0 +1,247 @@
+---
+title: "04 Classification"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+# some file setup parameters
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 999) # display numbers in non-scientific format
+```
+
+(2) Classification: Term has only two values: 36 and 60 month (3 or 5 years)
+                    Train a model to predict Lending Club's proposed payback times.
+              (based on loan amount, home ownership, annual income, and purpose)
+
+Dependent variable:
+
+* term (either 3 or 5 years)
+
+Predictor variables:
+
+* loan_amnt (integer)
+* annual_inc (numeric)
+* numeric_grade (integer)
+* home_ownership (factor)
+* purpose (factor)
+* int_rate (numeric)
+
+## Load data (again)
+```{r}
+library("tidyverse")
+data_url <- "https://raw.githubusercontent.com/staehlo/mlr3_and_tidymodels/main/example_data_set.csv"
+loans <- read_csv(file = data_url) %>%
+  mutate(numeric_grade = match(grade, LETTERS),
+         home_ownership = factor(home_ownership),
+         purpose = factor(purpose),
+         term = factor(term)
+         ) %>%
+  select(-c(grade, int_rate)) %>%
+  filter(annual_inc < 200000 & home_ownership != "NONE")
+rm(data_url)
+loans
+```
+
+
+********************************************************************************
+# Standalone: Using the randomForest package
+********************************************************************************
+
+```{r}
+library(randomForest)
+
+# Define test and training data sets
+set.seed(123)
+rows_for_training <- sample(nrow(loans), 0.8 * nrow(loans))
+train <- loans[rows_for_training,]
+test <- loans[-rows_for_training,]
+
+# mtry
+# ------------------------------------------------
+# mtry = number of predictors used at each node
+# rule of thumb: mtry = sqrt(number of predictors)
+# mtry = example for a hyperparameter !
+
+# importance
+# ------------------------------------------------
+# The permutation feature importance method would be used to determine the effects of the
+# variables in the random forest model. This method calculates the increase in the
+# prediction error(MSE) after permuting the feature values. If the permuting wouldn’t
+# change the model error, the related feature is considered unimportant.
+# (https://www.r-bloggers.com/2021/07/feature-importance-in-random-forest/)
+
+start <- Sys.time()
+rf.fit <- randomForest(term ~ loan_amnt + annual_inc + numeric_grade +
+                         home_ownership + purpose, ntree = 100,
+                       data = train, mtry = sqrt(6), importance = TRUE)
+end <- Sys.time()
+end - start; rm(start, end)
+
+rf.fit
+plot(rf.fit)
+varImpPlot(rf.fit)
+
+rf.predict <- predict(rf.fit, newdata = test)
+head(rf.predict)
+
+# confusion matrix
+table(rf.predict, test$term)
+
+# accuracy rate
+1 - mean(rf.predict != test$term)
+
+# error rate
+mean(rf.predict != test$term)
+
+rm(rows_for_training, test, train)
+```
+> end - start; rm(start, end)
+Time difference of 5.9082 secs
+> # accuracy rate
+[1] 0.8024312
+> # error rate
+[1] 0.1975688
+
+
+********************************************************************************
+# mlr3
+********************************************************************************
+
+## Load package
+```{r}
+# install.packages("mlr3verse")
+library("mlr3")
+library("mlr3viz")
+library("mlr3learners")
+```
+
+## Construct task
+```{r}
+mlr3task = as_task_classif(loans, target = "term")
+# mlr3task$select(...) -> not necessary as we want to use all columns
+autoplot(mlr3task)
+autoplot(mlr3task, type = "pairs")
+```
+
+## Instantiate learner
+```{r}
+available_learners <- as.data.table(mlr_learners)
+available_learners[task_type == "classif", c("key", "packages")]
+rm(available_learners)
+
+# We will use the learner "classif.ranger"
+library(ranger) # Instanitation of learner requires loaded package !
+# Option 1:
+mlr3learner = mlr_learners$get("classif.ranger") # 
+# Option 2: better, as you can directly set the hyperparameters
+mlr3learner = lrn("classif.ranger", mtry = round(sqrt(6)), num.trees = 100)
+mlr3learner
+```
+
+## Train the learner
+```{r}
+# Define train and test rows
+set.seed(123)
+mlr3splits = partition(mlr3task, ratio = 0.8)
+
+start = Sys.time()
+mlr3learner$train(mlr3task, mlr3splits$train)
+end = Sys.time()
+end - start; rm(start, end)
+
+mlr3learner
+mlr3learner$model
+```
+
+## Evaluation
+```{r}
+# Look for available performance measures
+mlr_measures$keys("classif")
+
+# We will use accuracy ("acc") and classification error ("ce")
+mlr3measures = msrs(c("classif.acc", "classif.ce")) # short form for > 1 measure
+
+# Make prediction
+mlr3predict = mlr3learner$predict(mlr3task, mlr3splits$test)
+
+# Compute selected performance measures
+mlr3predict$score(mlr3measures)
+
+# plot true versus true
+autoplot(mlr3predict)
+```
+> end - start; rm(start, end)
+Time difference of 3.075533 secs
+> mlr3predict$score(mlr3measures)
+classif.acc  classif.ce 
+  0.7980548   0.2019452
+
+
+********************************************************************************
+# tidymodels
+********************************************************************************
+
+## load packages
+```{r}
+library(tidymodels)
+```
+
+## Data Splitting
+```{r}
+set.seed(123)
+tidysplit <- initial_split(loans, prop = 0.8)
+tidytrain <- training(tidysplit)
+tidytest <- testing(tidysplit)
+```
+
+## Create recipe
+```{r}
+tidyrecipe <- recipe(term  ~ loan_amnt + annual_inc + numeric_grade +
+                       home_ownership + purpose, data = tidytrain)
+```
+
+## Create learner
+```{r}
+# Look up available learners: https://www.tidymodels.org/find/parsnip/#models
+tidylearner <- rand_forest(mtry = sqrt(6), trees = 100) %>%
+  set_mode("classification") %>% # this wasn't necessary for linear_reg()
+  set_engine("ranger")
+```
+
+## Build model
+```{r}
+tidyworkflow <- workflow() %>% add_model(tidylearner) %>% add_recipe(tidyrecipe)
+
+start = Sys.time()
+tidyfit <- tidyworkflow %>% fit(data = tidytrain)
+end = Sys.time()
+end - start; rm(start, end)
+
+tidyfit
+```
+
+## Evaluation
+```{r}
+tidymetrics <- metric_set(accuracy)
+
+# Make prediction
+tidypredict <- predict(tidyfit, new_data = tidytest)
+
+# Compute selected performance measures
+tidyevaluation <- tidymetrics(data = tidytest, truth = term,
+                              estimate = tidypredict$.pred_class)
+
+# Accuracy
+tidyevaluation$.estimate
+
+# Error
+1 - tidyevaluation$.estimate
+```
+> end - start; rm(start, end)
+Time difference of 3.130244 secs
+> tidyevaluation$.estimate (# Accuracy)
+[1] 0.8028151
+> 1 - tidyevaluation$.estimate (# Error)
+[1] 0.1971849

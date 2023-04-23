@@ -1,0 +1,260 @@
+---
+title: "03 Linear regression"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+# some file setup parameters
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 999) # display numbers in non-scientific format
+```
+
+(1) Regression: Train a model to predict Lending Club's interest rates
+                (based on loan amount, home ownership, annual income, and purpose)
+
+Dependent variable:
+
+* int_rate
+
+Predictor variables:
+
+* loan_amnt (integer)
+* annual_inc (numeric)
+* numeric_grade (integer)
+* home_ownership (factor)
+* purpose (factor)
+
+
+********************************************************************************
+# Standalone: Using lm from the stats package
+********************************************************************************
+
+## Define train and test rows
+```{r}
+set.seed(123)
+train <- sample(1:nrow(loans), 0.8 * nrow(loans))
+test <- setdiff(1:nrow(loans), train)
+```
+
+## Fit linear model
+```{r}
+lm.fit <- lm(int_rate ~ loan_amnt + annual_inc + numeric_grade
+             + home_ownership + purpose, data = loans, subset = train)
+lm.fit
+summary(lm.fit) # display maybe a bit confusing
+
+# for better table overview of results
+library(car)
+Anova(lm.fit, type = "III")
+```
+
+## Evaluation
+```{r}
+lm.predict <- predict.lm(lm.fit, newdata = loans[test,])
+
+# Variance explained in training data
+summary(lm.fit)$r.squared
+
+# Variance explained in test data  (not sure if this step is correct)
+(cor(loans[test,]$int_rate, lm.predict))^2
+
+# Root mean squared error (RMSE) of training data set:
+mean(sqrt((loans[train,]$int_rate - lm.fit$fitted.values)^2))
+# Root mean squared error (RMSE) of test data set:
+mean(sqrt((loans[test,]$int_rate - lm.predict)^2))
+
+# plot true versus true
+plot(lm.predict, loans[test,]$int_rate, col = "maroon",
+     main = "Test data set",
+     xlab = "predicted interest rate", ylab = "true interest rate")
+abline(0, 1, col = "blue")
+```
+> r.squared (train) 90.234
+> root mean squared error (train) 0.9151408
+> r.squared (test)  89.829
+> root mean squared error (test) 0.9151887
+
+```{r}
+# little clean-up
+rm(test, train)
+```
+
+
+********************************************************************************
+# mlr3
+********************************************************************************
+
+## Load packages
+```{r}
+# install.packages("mlr3verse")
+library("mlr3")
+```
+
+## Construct task
+```{r}
+mlr3task = as_task_regr(loans, target = "int_rate")
+str(mlr3task) # -> R6 class object
+mlr3task
+
+# Modify task to only contain our predictor variables of interest
+# -> "Mutate" the Task
+# Object$select -> this is a method  !!!
+mlr3task$select(c("loan_amnt", "annual_inc", "numeric_grade", "home_ownership",
+                "purpose"))
+mlr3task
+
+library("mlr3viz")
+autoplot(mlr3task)
+autoplot(mlr3task, type = "pairs")
+```
+
+## Instantiate learner
+```{r}
+# Look up all available learners
+library("mlr3learners")
+available_learners <- as.data.table(mlr_learners)
+available_learners
+available_learners[task_type == "regr", c("key", "packages")]
+rm(available_learners)
+
+# We will use the learner "regr.lm"
+# Instantiation:
+mlr3learner = mlr_learners$get("regr.lm") # short cut: mylearner = lrn("regr.lm")
+str(mlr3learner) # -> R6 class object
+mlr3learner
+
+# check pre-defined parameters for this learner
+mlr3learner$param_set
+```
+
+## Train the learner
+```{r}
+# Define train and test rows
+set.seed(123)
+mlr3splits = partition(mlr3task, ratio = 0.8)
+str(mlr3splits)
+
+# Object$select -> this is a method  !!!
+mlr3learner
+mlr3learner$train(mlr3task, mlr3splits$train)
+mlr3learner
+
+mlr3learner$model
+
+# for comparison
+lm.fit
+```
+
+## Evaluation
+```{r}
+# Look for available performance measures
+mlr_measures
+mlr_measures$keys("regr")
+
+# we will again use R Squared and the Root Mean Squared Error (RMSE)
+mlr3measures = mlr_measures$get("regr.rsq")
+mlr3measures = msr("regr.rsq") # short form !
+mlr3measures = msrs(c("regr.rsq", "regr.rmse")) # short form with > 1 measure
+mlr3measures
+
+# Make prediction
+mlr3predict = mlr3learner$predict(mlr3task, mlr3splits$test)
+mlr3predict
+
+# Compute selected performance measures
+mlr3predict$score(mlr3measures)
+
+# plot true versus true
+autoplot(mlr3predict)
+```
+> regr.rsq regr.rmse 
+>0.9024292 1.1644643
+
+
+
+********************************************************************************
+# tidymodels
+********************************************************************************
+
+## load packages
+```{r}
+library(tidyverse)
+library(tidymodels)
+```
+
+
+## Load data (again)
+```{r}
+data_url <- "https://raw.githubusercontent.com/staehlo/mlr3_and_tidymodels/main/example_data_set.csv"
+loans2 <- read_csv(file = data_url)
+loans2 <- loans2 %>%
+  mutate(numeric_grade = match(grade, LETTERS),
+         home_ownership = factor(home_ownership),
+         purpose = factor(purpose)
+         ) %>%
+  select(-c(grade, term)) %>%
+  filter(annual_inc < 200000 & home_ownership != "NONE")
+loans2
+```
+
+## Data Splitting
+```{r}
+set.seed(123)
+tidysplit <- initial_split(loans2, prop = 0.8)
+str(tidysplit)
+
+tidytrain <- training(tidysplit)
+tidytest <- testing(tidysplit)
+tidytrain
+```
+
+## Create recipe
+```{r}
+tidyrecipe <- recipe(int_rate ~ loan_amnt + annual_inc + numeric_grade +
+                       home_ownership + purpose, data = tidytrain)
+tidyrecipe
+summary(tidyrecipe)
+```
+
+## Create learner
+```{r}
+# Look up available learners: https://www.tidymodels.org/find/parsnip/#models
+linear_reg()
+tidylearner <- linear_reg() %>% set_engine("lm") # set_engine here not necessary
+str(tidylearner)
+```
+
+## Build model
+```{r}
+tidyworkflow <- workflow() %>% add_model(tidylearner) %>% add_recipe(tidyrecipe)
+tidyfit <- tidyworkflow %>% fit(data = tidytrain)
+
+str(tidyfit)
+tidyfit
+tidyfit %>% extract_fit_parsnip() %>% tidy
+```
+
+## Evaluation
+```{r}
+# we will again use R Squared and the Root Mean Squared Error (RMSE)
+tidymetrics <- metric_set(rsq, rmse)
+tidymetrics
+
+# Make prediction
+tidypredict <- predict(tidyfit, new_data = tidytest)
+tidypredict
+
+# Compute selected performance measures
+tidymetrics(data = tidytest, truth = int_rate, estimate = tidypredict$.pred)
+
+ggplot(mapping = aes(x = tidypredict$.pred, y = tidytest$int_rate)) +
+  geom_point() + xlab("predicted interest rate") + ylab("true interest rate") +
+  geom_abline(intercept = 0, slope = 1, color = "blue")
+```
+> # A tibble: 2 × 3
+>   .metric .estimator .estimate
+>   <chr>   <chr>          <dbl>
+> 1 rsq     standard       0.902
+> 2 rmse    standard       1.16 

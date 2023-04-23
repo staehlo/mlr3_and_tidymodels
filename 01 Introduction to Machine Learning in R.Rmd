@@ -11,11 +11,24 @@ knitr::opts_chunk$set(echo = TRUE)
 options(scipen = 999) # display numbers in non-scientific format
 ```
 
+
 # Program:
 - ------------------------------------------------------------------------------
 
-18:30 bis 19:15 Uhr: Workshop I: Machine Learning mit mlr3  
-19:30 bis 20:15 Uhr: Workshop II: Machine Learning mit tidymodels  
+18:30 bis 19:15 Uhr: Workshop I:
+
+* Machine learning options in R
+* Our Example Data Set
+* Regression and classification examples with standalone packages, mlr3, tidymodels
+
+19:30 bis 20:15 Uhr: Workshop II:
+
+* (further learners)
+* Hyperparameter Tuning in mlr3 and tidymodels
+* Pipelines and Workflows in mlr3 and tidymodels
+
+
+Scripts: https://github.com/staehlo/mlr3_and_tidymodels
 
 
 # Machine Learning versus Statistics
@@ -32,11 +45,11 @@ Machine Learning:
 
 * Start in 1940s with mathematical models of neuronal networks
 * Take off in the 1990s
-* Used mainly for prediction
-* "Machine" learns to make assumptions about the data (i.e. selecting "hyperparameters" [1])
-* Humans can only interpret the results. Internal processes and weighted factors remain often hidden
-
-[1] Hyperparameters: Starting parameters for the modelling algorithms which are not part of the data themselves.
+* Used for prediction
+* "Machine" learns to make assumptions about the data based on a training data set
+* Many learners need to be given learner-specific starting parameters : so called "Hyperparameters"
+* The "Machine" can then apply the learned interpretation to new data sets
+* Humans can evaluate the results but the process steps are hard to interpret ("Black Box")
 
 See also:  
 https://www.simplilearn.com/tutorials/artificial-intelligence-tutorial/ai-vs-machine-learning-vs-deep-learning  
@@ -54,6 +67,7 @@ https://www.techtarget.com/whatis/A-Timeline-of-Machine-Learning-History
 * tidymodels
 * mlr3
 
+## Environments / Frameworks
 
 caret:
 
@@ -76,7 +90,6 @@ mlr:
 
 tidymodels:
 
-* Acronym for **M**achine **L**earning in **R** 3
 * Launch: 2018
 * Developers: Max Kuhn [1], Hadley Wickham [2], et al.
 * Location of developers: [1] and [2] RStudio (U.S.A. and New Zealand)
@@ -102,7 +115,7 @@ Downloaded file: http://cran-logs.rstudio.com/2023/2023-04-10.csv.gz
 
 In Linux terminal
 ```{bash}
-gzip -d 2023-04-10.csv.gz
+# unpack: gzip -d 2023-04-10.csv.gz
 grep -w "caret" -c 2023-04-10.csv
 grep -w 'mlr"' -c 2023-04-10.csv
 grep -w "tidymodels" -c 2023-04-10.csv
@@ -119,8 +132,22 @@ cat 2023-04-10.csv | grep -w "mlr3verse"
 | caret      |  9091
 | mlr        |   465
 | tidymodels |  2082
-| tidyverse  | 53765
+| tidyverse  | 53765 (not really an Machine Learning package!)
 | mlr3       |   217
 | mlr3verse  |    49
 
-STILL MISSING: How many packages get installed upon installation of each ML library?
+
+## Number of installed packages per environment
+
+| install.packages("") | number of packages that get installed
+| -------------------  | -------------------------------------
+| caret                |   65
+| tidymodels           |   84
+| tidyverse            |  102 (not really an Machine Learning package!)
+| mlr3                 |   20
+| mlr3verse            |   66
+
+Warning:
+tidyverse also loads ragg and textshaping
+-> On Fedora, both packages need a lot of extra libraries which have to be installed
+via the operating system's terminal!

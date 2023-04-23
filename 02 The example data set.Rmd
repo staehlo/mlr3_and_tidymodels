@@ -1,0 +1,130 @@
+---
+title: "02 The example data set"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+# some file setup parameters
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 999) # display numbers in non-scientific format
+```
+
+
+# The Loans Data Set
+- ------------------------------------------------------------------------------
+
+The 'Lending Club' is a financial service company headquarted in San Francisco. Until 2019, their business model was peer-to-peer lending: They connected people who wanted to lend money to people who wanted to borrow money. The following data set contains contains real data from past loans!
+
+Links:  
+https://www.lendingclub.com/  
+https://en.wikipedia.org/wiki/LendingClub  
+Disgruntled creditor/investor:
+https://www.youtube.com/watch?v=bSeOrUIfLSc
+
+```{r}
+data_url <- "https://raw.githubusercontent.com/staehlo/mlr3_and_tidymodels/main/example_data_set.csv"
+writeLines(readLines(data_url, 4))
+```
+
+| Header         | Explanation
+| -------------- | ------------
+| int_rate       | interest rate in percent
+| loan_amnt      | requested loan amount in US Dollar
+| term           | number of month till total pay back [1]
+| grade          | loan security rating computed the Lending Club [2]
+| home_ownership | housing situation of the borrower [3]
+| annual_inc     | annual gross income of the borrower in US Dollar
+| purpose        | intended use of money as indicated by the borrower
+
+Details:  
+[1] term: Borrowers have to make one back payment per month throughout the term.
+[2] grade: The rating is calculated by Lending Club's own algorithm. The main input parameter is the borrower's FICO score (comparable to Germany's "Schufa-Abfrage"). Ratings go from "A" (pay back on time is very likely) till "G" (some risk that the borrower won't be able to pay the money back).
+[3] home_ownership: Categories are mortgage, none, other, own, rent
+
+Possible analyses:
+
+(1) Regression: Train a model to predict Lending Club's interest rates
+                (based on loan amount, home ownership, annual income, and purpose)
+
+(2) Classification: Term has only two values: 36 and 60 month (3 or 5 years)
+                    Train a model to predict Lending Club's proposed payback times.
+
+
+Load data
+```{r}
+loans <- read.csv2(file = data_url, header = TRUE, sep = ",", dec=".")
+rm(data_url)
+str(loans)
+```
+
+Check the income distribution
+```{r}
+plot(loans$annual_inc, col = "maroon",
+     xlab = "random order", ylab = "annual income in USD")
+hist(loans$annual_inc, 50, col = "maroon")
+```
+
+We will focus on people with an annual income below 200'000 USD
+```{r}
+loans <- loans[loans$annual_inc < 200000,]
+plot(loans$annual_inc, col = "maroon",
+     xlab = "random order", ylab = "annual income in USD")
+hist(loans$annual_inc, 50, col = "maroon", xlab = "annual income in USD")
+```
+
+Check the frequency of the home owner categories
+```{r}
+table(loans$home_ownership)
+```
+
+We will ignore the three cases with no indicated home ownership
+```{r}
+loans <- loans[loans$home_ownership != "NONE",]
+loans <- droplevels(loans) # remove the no longer used "NONE" level
+table(loans$home_ownership)
+```
+
+# Preprocessing
+```{r}
+loans$home_ownership <- as.factor(loans$home_ownership)
+loans$purpose <- as.factor(loans$purpose)
+loans$term <- as.factor(loans$term) # for the classification task
+
+# convert grade to numeric:
+loans$numeric_grade <- match(loans$grade, LETTERS)
+
+# loans$grade <- as.factor(loans$grade)
+# loans$monthly_payback <-round(loans$loan_amnt / loans$term, 2)
+
+str(loans)
+```
+
+# Exploratory Plotting
+```{r}
+set.seed(123)
+tmp <- loans[sample(nrow(loans), 1000),]
+
+plot(tmp$annual_inc, tmp$int_rate, col = "maroon",
+     xlab = "annual income in USD", ylab = "interest rate in percent")
+
+plot(tmp$loan_amnt, tmp$int_rate, col = "maroon",
+     xlab = "requested loan in USD", ylab = "interest rate in percent")
+
+boxplot(int_rate ~ home_ownership, tmp, col = "maroon",
+        xlab = "", ylab = "interest rate in percent")
+
+par.default <- par()
+par(mar = c(7, 4.1, 4.1, 2.1))
+x <- boxplot(int_rate ~ purpose, tmp, col = "maroon",
+        xlab = "", ylab = "interest rate in percent", xaxt = "n")
+nlevels = length(levels(tmp$purpose))
+text(x = (1:nlevels)-0.4, y = 2, labels = x$names, xpd=NA, srt = 45)
+par(par.default)
+
+x <- boxplot(int_rate ~ grade, tmp, col = "maroon",
+             ylab = "interest rate in percent")
+
+rm(x, nlevels, tmp, par.default)
+```
