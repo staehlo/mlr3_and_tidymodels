@@ -1,0 +1,24 @@
+---
+title: "Discussion"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+# some file setup parameters
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 999) # display numbers in non-scientific format
+```
+
+On not using tidymodels
+Posted by John in teachingR on October 5, 2020 
+- teachingR / Academic and staff blogs from the University of Leicester
+https://staffblogs.le.ac.uk/teachingr/2020/10/05/on-not-using-tidymodels/
+
+Stackoverflow: data.table vs dplyr
+with answers from Arun Srinivasan and Hadley Wickham
+https://stackoverflow.com/questions/21435339/data-table-vs-dplyr-can-one-do-something-well-the-other-cant-or-does-poorly
+
+Reddit-Thread: not a fan of tidymodels
+https://www.reddit.com/r/Rlanguage/comments/jqxjw6/not_a_fan_of_tidymodels_where_am_i_wrong/
