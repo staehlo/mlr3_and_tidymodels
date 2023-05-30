@@ -37,18 +37,19 @@ Scripts: https://github.com/staehlo/mlr3_and_tidymodels
 Statistics:
 
 * Start of modern statistics approx. 1800 (least squares by Legendre, Gauß)
+* It is a branch of applied mathematics
 * Used for inference & prediction
 * Humans make assumptions about the data before starting any calculations (e.g. by selecting the independent variables)
 * Humans can (theoretically) understand each step of the analysis
 
 Machine Learning:
 
-* Start in 1940s with mathematical models of neuronal networks
-* Take off in the 1990s
+* Start in 1940s with mathematical models of neuronal networks / Take off in the 1990s 
+* It is a branch of Artificial Intelligence
 * Used for prediction
 * "Machine" learns to make assumptions about the data based on a training data set
-* Many learners need to be given learner-specific starting parameters : so called "Hyperparameters"
 * The "Machine" can then apply the learned interpretation to new data sets
+* Many learners need to be given learner-specific starting parameters : so called "Hyperparameters"
 * Humans can evaluate the results but the process steps are hard to interpret ("Black Box")
 
 See also:  
@@ -61,13 +62,14 @@ https://www.techtarget.com/whatis/A-Timeline-of-Machine-Learning-History
 # Machine learning options in R
 - ------------------------------------------------------------------------------
 
-* R core + standalone packages
+* R base + standalone packages
+Environments / Frameworks:
 * caret
 * mlr
 * tidymodels
 * mlr3
 
-## Environments / Frameworks
+## popular Environments / Frameworks
 
 caret:
 
@@ -76,7 +78,7 @@ caret:
 * Developers: Max Kuhn (https://www.linkedin.com/in/max-kuhn-864a9110/) et al.
 * Developer affiliation: Pfizer (U.S.A.)
 * Publication: https://www.jstatsoft.org/article/view/v028i05
-* Predecessor: R core + standalone packages 
+* Predecessor: R base + standalone packages 
 
 mlr:
 
@@ -84,7 +86,7 @@ mlr:
 * Launch: 2013
 * Developers: Bernd Bischl [1], Michael Lang [2], et al.
 * Developer affiliation: [1] LMU München, [2] TU Dortmund
-* Predecessor: R core + standalone packages (is this correct ?)
+* Predecessor: R base + standalone packages (is this correct ?)
 * Publication: https://jmlr.org/papers/v17/15-066.html
 * Status: "{mlr} is considered retired from the mlr-org team." (https://mlr.mlr-org.com/)
 
@@ -99,7 +101,7 @@ tidymodels:
 
 mlr3:
 
-* Acronym for **M**achine **L**earning in **R** 3
+* Acronym for **M**achine **L**earning in **R** **3**
 * Launch: 2019
 * Developers: Bernd Bischl [1], Michael Lang [2], et al.
 * Developer affiliation: [1] LMU München, [2] TU Dortmund
@@ -132,7 +134,7 @@ cat 2023-04-10.csv | grep -w "mlr3verse"
 | caret      |  9091
 | mlr        |   465
 | tidymodels |  2082
-| tidyverse  | 53765 (not really an Machine Learning package!)
+| tidyverse  | 53765 (not really a Machine Learning package!)
 | mlr3       |   217
 | mlr3verse  |    49
 
@@ -149,5 +151,4 @@ cat 2023-04-10.csv | grep -w "mlr3verse"
 
 Warning:
 tidyverse also loads ragg and textshaping
--> On Fedora, both packages need a lot of extra libraries which have to be installed
-via the operating system's terminal!
+-> On Fedora, both packages need a lot of extra libraries which have to be installed via the operating system's terminal!
