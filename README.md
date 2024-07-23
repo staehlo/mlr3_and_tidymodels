@@ -1,5 +1,5 @@
 # mlr3_and_tidymodels
-material for "Offline-Workshop: Machine Learning mit mlr3 und tidymodels"
+material for "Workshop: Machine Learning mit mlr3 und tidymodels"
 
 R User Group Wiesbaden - 26 April 2023 in Wiesbaden
 
